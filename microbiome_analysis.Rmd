@@ -113,7 +113,7 @@ sampledata = sample_data(samples)
 ps <- phyloseq(otu_table(otu, taxa_are_rows=FALSE), 
                sample_data(samples), 
                tax_table(taxon))
-ps 
+ps #2048 taxa and 58 samples
 
 # remove chloroplasts and mitochondria and Eukaryota
 get_taxa_unique(ps, "Family")
@@ -126,25 +126,7 @@ ps <- subset_taxa(ps, Kingdom !="NA")
 get_taxa_unique(ps, "Family")
 get_taxa_unique(ps, "Order") 
 get_taxa_unique(ps, "Kingdom")
-ps
-# 1984 taxa and 58 samples
-get_taxa_unique(ps, "Genus") # 529 genera
-get_taxa_unique(ps, "Family") # 284 families
-get_taxa_unique(ps, "Order") # 175 orders
-get_taxa_unique(ps, "Class") # 78 classes
-get_taxa_unique(ps, "Phylum") # 36 phyla
-
-ps5<-filter_taxa(ps, function(x) mean(x) >5, TRUE)
-ntaxa(ps5) #199
-get_taxa_unique(ps5, "Genus") # 84 genera
-
-ps2<-filter_taxa(ps, function(x) mean(x) >2, TRUE)
-ntaxa(ps2) #325
-get_taxa_unique(ps2, "Genus") #129 genera
-
-ps1<-filter_taxa(ps, function(x) mean(x) >1, TRUE)
-ntaxa(ps1) #441, retaining 22% of taxa
-get_taxa_unique(ps1, "Genus") #160 genera
+ps # 1984 taxa and 58 samples
 
 # Now export cleaned otu and taxa tables from phyloseq for future reference
 otu = as(otu_table(ps), "matrix")
@@ -152,6 +134,26 @@ taxon = as(tax_table(ps), "matrix")
 metadata = as(sample_data(ps), "matrix")
 write.table(otu,"silva_nochloronomito_otu_table.txt",sep="\t",col.names=NA)
 write.table(taxon,"silva_nochloronomito_taxa_table.txt",sep="\t",col.names=NA)
+
+# explore data
+length(get_taxa_unique(ps, "Genus")) # 529 genera
+length(get_taxa_unique(ps, "Family")) # 284 families
+length(get_taxa_unique(ps, "Order")) # 175 orders
+length(get_taxa_unique(ps, "Class")) # 78 classes
+length(get_taxa_unique(ps, "Phylum")) # 36 phyla
+
+ps5<-filter_taxa(ps, function(x) mean(x) >5, TRUE)
+ntaxa(ps5) #199 - this retains 10% of original ASVs
+get_taxa_unique(ps5, "Genus") # 84 genera
+
+ps2<-filter_taxa(ps, function(x) mean(x) >2, TRUE)
+ntaxa(ps2) #325 
+get_taxa_unique(ps2, "Genus") #129 genera
+
+ps1<-filter_taxa(ps, function(x) mean(x) >1, TRUE)
+ntaxa(ps1) #441, retaining 22% of taxa
+get_taxa_unique(ps1, "Genus") #160 genera
+
 
 # export tables with low abundance taxa removed
 otu = as(otu_table(ps1), "matrix")
