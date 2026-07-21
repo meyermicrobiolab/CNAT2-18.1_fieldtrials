@@ -184,6 +184,18 @@ ps1 <- phyloseq(otu_table(otu, taxa_are_rows=FALSE),
                tax_table(taxon))
 ps1 # 441 taxa and 58 samples
 
+######## SEPTEMBER SAMPLES ONLY
+ps1_sept = subset_samples(ps1, Month == "September")
+ps1_sept # 441 taxa and 40 samples
+#Prune taxa no longer in samples
+ps1_sept <- prune_taxa(taxa_sums(ps1_sept) > 0, ps1_sept)
+ps1_sept # 359 taxa and 40 samples
+# should I keep the few HH samples?
+
+
+
+
+
 # CALCULATE AITCHISON DISTANCE
 # First, replace 0 values with an estimate (because normalization is taking log, can't have 0)
 # Also transposing here, need samples as rows
@@ -216,7 +228,7 @@ single_df<-merge(samples2,df_out2, by="sample")
 theme_set(theme_bw()+theme(panel.grid.major = element_blank(),panel.grid.minor = element_blank()))
 cols<-c("DD"="#D55E00","HD"="#56B4E9","HH"="#0072B2")
 
-p<-ggplot(single_df,aes(x=PC1,y=PC2,color=Health,shape=Month))
+p<-ggplot(single_df,aes(x=PC1,y=PC2,color=Health))
 p<-p+geom_point(size=2)+
   theme(axis.title = element_text(size=14))+
   theme(axis.text=element_text(size=12))+
@@ -234,16 +246,16 @@ perm<-adonis2(dist.clr~Health*Treatment,as(sample_data(ps1),"data.frame"),by="te
 print(perm)
 # Microbial community variation is explained by Health (R2 = 0.07083, p < 0.001), but not by treatment
 
-perm<-adonis2(dist.clr~Health*Month,as(sample_data(ps1),"data.frame"),by="terms")
-print(perm)
+#perm<-adonis2(dist.clr~Health*Month,as(sample_data(ps1),"data.frame"),by="terms")
+#print(perm)
 # Microbial community variation is explained by Health (R2 = 0.07083, p < 0.001), by Month (R2 = 0.08554, p < 0.001), and by the interaction of Health and Month (R2 = 0.04778, p = 0.001)
 
 perm2<-pairwise.adonis2(dist.clr~Health,as(sample_data(ps1),"data.frame"),by = "terms")
 print(perm2)
 # DD sign diff from HD, no other sign diff
 
-perm3<-pairwise.adonis2(dist.clr~Health/Month,as(sample_data(ps1),"data.frame"), strata='Month')
-print(perm3)
+#perm3<-pairwise.adonis2(dist.clr~Health/Month,as(sample_data(ps1),"data.frame"), strata='Month')
+#print(perm3)
 # DD sign diff from HD, no other sign diff
 ```
 
