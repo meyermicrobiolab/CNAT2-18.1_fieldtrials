@@ -113,20 +113,20 @@ sampledata = sample_data(samples)
 ps <- phyloseq(otu_table(otu, taxa_are_rows=FALSE), 
                sample_data(samples), 
                tax_table(taxon))
-ps #2048 taxa and 58 samples
+ps # 1351 taxa and 34 samples
 
 # remove chloroplasts and mitochondria and Eukaryota
-get_taxa_unique(ps, "Family")
-get_taxa_unique(ps, "Order")
-get_taxa_unique(ps, "Kingdom")
+get_taxa_unique(ps, "Family") # 232
+get_taxa_unique(ps, "Order") # 140
+get_taxa_unique(ps, "Kingdom") # 2
 ps <- subset_taxa(ps, Family !="Mitochondria")
 ps <- subset_taxa(ps, Order !="Chloroplast")
 ps <- subset_taxa(ps, Kingdom !="Eukaryota")
 ps <- subset_taxa(ps, Kingdom !="NA")
-get_taxa_unique(ps, "Family")
-get_taxa_unique(ps, "Order") 
-get_taxa_unique(ps, "Kingdom")
-ps # 1984 taxa and 58 samples
+get_taxa_unique(ps, "Family") # 230
+get_taxa_unique(ps, "Order") # 139
+get_taxa_unique(ps, "Kingdom") # 2
+ps # 1321 taxa and 34 samples
 
 # Now export cleaned otu and taxa tables from phyloseq for future reference
 otu = as(otu_table(ps), "matrix")
@@ -136,24 +136,23 @@ write.table(otu,"silva_nochloronomito_otu_table.txt",sep="\t",col.names=NA)
 write.table(taxon,"silva_nochloronomito_taxa_table.txt",sep="\t",col.names=NA)
 
 # explore data
-length(get_taxa_unique(ps, "Genus")) # 529 genera
-length(get_taxa_unique(ps, "Family")) # 284 families
-length(get_taxa_unique(ps, "Order")) # 175 orders
-length(get_taxa_unique(ps, "Class")) # 78 classes
-length(get_taxa_unique(ps, "Phylum")) # 36 phyla
+length(get_taxa_unique(ps, "Genus")) # 405 genera
+length(get_taxa_unique(ps, "Family")) # 230 families
+length(get_taxa_unique(ps, "Order")) # 139 orders
+length(get_taxa_unique(ps, "Class")) # 61 classes
+length(get_taxa_unique(ps, "Phylum")) # 31 phyla
 
 ps5<-filter_taxa(ps, function(x) mean(x) >5, TRUE)
-ntaxa(ps5) #199 - this retains 10% of original ASVs
-get_taxa_unique(ps5, "Genus") # 84 genera
+ntaxa(ps5) # 144 - this retains 11% of original ASVs
+get_taxa_unique(ps5, "Genus") # 62 genera
 
 ps2<-filter_taxa(ps, function(x) mean(x) >2, TRUE)
-ntaxa(ps2) #325 
-get_taxa_unique(ps2, "Genus") #129 genera
+ntaxa(ps2) # 232, retaining 18% of taxa 
+get_taxa_unique(ps2, "Genus") # 100 genera
 
 ps1<-filter_taxa(ps, function(x) mean(x) >1, TRUE)
-ntaxa(ps1) #441, retaining 22% of taxa
-get_taxa_unique(ps1, "Genus") #160 genera
-
+ntaxa(ps1) # 312, retaining 24% of taxa
+get_taxa_unique(ps1, "Genus") # 130 genera
 
 # export tables with low abundance taxa removed
 otu = as(otu_table(ps1), "matrix")
@@ -168,177 +167,98 @@ otu_ra = as(otu_table(ps_ra), "matrix")
 write.table(otu_ra,"silva_nochloronomito_otu_table_ps1_RA.txt",sep="\t",col.names=NA)
 
 ```
-# BETA DIVERSITY
+# ALPHA DIVERSITY
 
 ```{r}
-# Create phyloseq object with filtered ASVs (low abundance taxa removed)
-otu <- read.table("silva_nochloronomito_otu_table_ps1.txt",sep="\t",header=TRUE, row.names=1)
-taxon <- read.table("silva_nochloronomito_taxa_table_ps1.txt",sep="\t",header=TRUE,row.names=1)
+# Clear data and read in tables with all ASVs
+otu <- read.table("silva_nochloronomito_otu_table.txt",sep="\t",header=TRUE, row.names=1)
+taxon <- read.table("silva_nochloronomito_taxa_table.txt",sep="\t",header=TRUE,row.names=1)
 samples<-read.table("metadata.txt",sep="\t",header=T,row.names=1)
 OTU = otu_table(otu, taxa_are_rows=FALSE)
 taxon<-as.matrix(taxon)
 TAX = tax_table(taxon)
 sampledata = sample_data(samples)
-ps1 <- phyloseq(otu_table(otu, taxa_are_rows=FALSE), 
+ps <- phyloseq(otu_table(otu, taxa_are_rows=FALSE), 
                sample_data(samples), 
                tax_table(taxon))
-ps1 # 441 taxa and 58 samples
+ps # 1321 taxa and 34 samples
 
-######## SEPTEMBER SAMPLES ONLY
-ps1_sept = subset_samples(ps1, Month == "September")
-ps1_sept # 441 taxa and 40 samples
-#Prune taxa no longer in samples
-ps1_sept <- prune_taxa(taxa_sums(ps1_sept) > 0, ps1_sept)
-ps1_sept # 359 taxa and 40 samples
-# should I keep the few HH samples?
+# calculate alpha diversity measures with phyloseq wrapper
+alpha.diversity <- estimate_richness(ps, measures = c("Observed","Shannon","Simpson"))
 
-
-
-
-
-# CALCULATE AITCHISON DISTANCE
-# First, replace 0 values with an estimate (because normalization is taking log, can't have 0)
-# Also transposing here, need samples as rows
-d.czm <- cmultRepl(t(otu), method="CZM", label=0, z.warning=1)
-# Perform the center-log-ratio (CLR) transformation 
-d.clr <- codaSeq.clr(d.czm)
-# transpose matrix of CLR transformed data for ordination and dendrogram
-E.clr <- t(d.clr)
-# plot compositional PCA biplot (perform a singular value decomposition)
-d.pcx <- prcomp(E.clr)
-# calculate percent variance explained for the axis labels
-pc1 <- round(d.pcx$sdev[1]^2/sum(d.pcx$sdev^2),2)
-pc2 <- round(d.pcx$sdev[2]^2/sum(d.pcx$sdev^2),2)
-xlab <- paste("PC1: ", pc1, sep="")
-ylab <- paste("PC2: ", pc2, sep="")
-# informational plots, not for publication
-#biplot(d.pcx, cex=c(0.6,0.4), var.axes=F,scale=1, xlab=xlab, ylab=ylab)
-screeplot(d.pcx)
-
-# replot PCA with ggplot2 (showing samples only)
-# first, create a dataframe with the PCA values
-df_out <- as.data.frame(d.pcx$x)
-# create a single dataframe for plotting in case samples are ordered differently in the pcx dataframe than in the sample metadata - in this dataset, it looks like they are already in the same order but samples names that start with numbers instead of letters can be an issue
-# step 1 make rownames a column for that I can merge by sample name
-samples2<-rownames_to_column(samples, var = "sample")
-df_out2<-rownames_to_column(df_out, var = "sample")
-single_df<-merge(samples2,df_out2, by="sample")
+# combine alpha diversity measures with sample metadata
+alpha.diversity <- tibble::rownames_to_column(alpha.diversity, "sample")
+# fix sample names
+alpha.diversity$sample <- gsub("\\.","-",alpha.diversity$sample)
+samples <- tibble::rownames_to_column(samples, "sample")
+alpha_meta <- merge(alpha.diversity, samples, by="sample", all=TRUE)
 
 #set aesthetics 
 theme_set(theme_bw()+theme(panel.grid.major = element_blank(),panel.grid.minor = element_blank()))
-cols<-c("DD"="#D55E00","HD"="#56B4E9","HH"="#0072B2")
+cols<-c("DD"="#D55E00","HD"="#0072B2")
 
-p<-ggplot(single_df,aes(x=PC1,y=PC2,color=Health))
-p<-p+geom_point(size=2)+
-  theme(axis.title = element_text(size=14))+
-  theme(axis.text=element_text(size=12))+
-  theme(legend.title = element_text(size=14))+
-  theme(legend.text = element_text(size=12))+
-  theme(strip.text.x = element_text(size=12))+
-  scale_color_manual(values=cols)+
-  guides(fill = guide_legend(override.aes=list(shape=21)))
-p + labs(x=xlab, y=ylab)
-
-####### Use phyloseq/vegan to perform PERMANOVA
-# permanova between groups using Aitchison distance
-dist.clr <- dist(E.clr)
-perm<-adonis2(dist.clr~Health*Treatment,as(sample_data(ps1),"data.frame"),by="terms")
-print(perm)
-# Microbial community variation is explained by Health (R2 = 0.07083, p < 0.001), but not by treatment
-
-#perm<-adonis2(dist.clr~Health*Month,as(sample_data(ps1),"data.frame"),by="terms")
-#print(perm)
-# Microbial community variation is explained by Health (R2 = 0.07083, p < 0.001), by Month (R2 = 0.08554, p < 0.001), and by the interaction of Health and Month (R2 = 0.04778, p = 0.001)
-
-perm2<-pairwise.adonis2(dist.clr~Health,as(sample_data(ps1),"data.frame"),by = "terms")
-print(perm2)
-# DD sign diff from HD, no other sign diff
-
-#perm3<-pairwise.adonis2(dist.clr~Health/Month,as(sample_data(ps1),"data.frame"), strata='Month')
-#print(perm3)
-# DD sign diff from HD, no other sign diff
-```
-
-# Examine microbiome composition
-
-```{r}
-# Create phyloseq object with relative abundance of filtered ASVs (low abundance taxa removed)
-otu <- read.table("silva_nochloronomito_otu_table_ps1_RA.txt",sep="\t",header=TRUE, row.names=1)
-taxon <- read.table("silva_nochloronomito_taxa_table_ps1.txt",sep="\t",header=TRUE,row.names=1)
-samples<-read.table("metadata.txt",sep="\t",header=T,row.names=1)
-OTU = otu_table(otu, taxa_are_rows=FALSE)
-taxon<-as.matrix(taxon)
-TAX = tax_table(taxon)
-sampledata = sample_data(samples)
-ps_ra <- phyloseq(otu_table(otu, taxa_are_rows=FALSE), 
-               sample_data(samples), 
-               tax_table(taxon))
-ps_ra # 441 taxa and 58 samples
-
-get_taxa_unique(ps_ra, "Genus") #160 genera
-get_taxa_unique(ps_ra, "Family") #92 families
-get_taxa_unique(ps_ra, "Order") #51 orders
-
-# Plotting most abundant families - first collapse ASVs into families then reshape data for plotting
-ps_ra_f = tax_glom(ps_ra, "Family")
-ps_ra_f # 92 families
-otu_f = as(otu_table(ps_ra_f), "matrix")
-taxon_f = as(tax_table(ps_ra_f), "matrix")
-fam<-t(otu_f)
-fam <- as.data.frame(fam)
-fam <- tibble::rownames_to_column(fam, "ASV")
-taxon_f <- as.data.frame(taxon_f)
-taxon_f <- tibble::rownames_to_column(taxon_f, "ASV")
-fam_tax <- merge(taxon_f, fam, by="ASV", all=FALSE)
-fam_tax$Genus<-NULL
-fam_tax$ASV<-NULL
-# Order by total relative abundance and choose top 25 families
-fam_tax <- fam_tax %>% mutate("total" = rowSums((fam_tax[,6:63]), na.rm = TRUE))  
-fam_tax <- fam_tax[order(fam_tax$total, decreasing = TRUE),]
-fam25 <- fam_tax[1:25,]
-fam25$total<-NULL
-fam_long<-melt(fam25,value.name="proportion",variable.name="sample",id.vars=c("Kingdom","Phylum","Class","Order","Family"))
-# Merge with metadata for plotting aesthetics
-samples <- as.data.frame(samples)
-samples <- tibble::rownames_to_column(samples, "sample")
-famplot <- merge(fam_long,samples,by="sample", all=TRUE)
-# how many classes or orders in the top 25 families?
-unique(famplot$Class) # 9 classes:"Gammaproteobacteria","Alphaproteobacteria","Bacteroidia","Campylobacteria","Cyanobacteriia","Verrucomicrobiia","Clostridia","Blastocatellia","Acidimicrobiia"
-unique(famplot$Family)
-# [1] "Vibrionaceae"            "Pseudoalteromonadaceae"  "Paracoccaceae"           "Flavobacteriaceae"       "Alteromonadaceae"        "Arcobacteraceae"        
-# [7] "Rhodospirillales"        "Cyanobiaceae"            "Nitrincolaceae"          "Colwelliaceae"           "Saccharospirillaceae"    "Rubritaleaceae"         
-# [13] "Rhizobiaceae"            "Ga0077536"               "Clostridiaceae"          "Blastocatellaceae"       "Shewanellaceae"          "Actinomarinaceae"       
-# [19] "Alcaligenaceae"          "Cyclobacteriaceae"       "AEGEAN-169 marine group" "Clade I"                 "Sphingomonadaceae"       "Clade III"              
-# [25] "SAR116 clade"
-
-# set aesthetics
-theme_set(theme_bw()+theme(panel.grid.major = element_blank(),panel.grid.minor = element_blank()))
-cbPalette <- c("#999999", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7","#000000")
-# order families alphabetically under class, first = bottom of plot
-famplot$Family<-factor(famplot$Family, levels=c("Rubritaleaceae","Vibrionaceae","Shewanellaceae","Saccharospirillaceae","Pseudoalteromonadaceae","Nitrincolaceae","Ga0077536","Colwelliaceae","Alteromonadaceae","Alcaligenaceae","Cyanobiaceae","Clostridiaceae","Arcobacteraceae","Blastocatellaceae","Flavobacteriaceae","Cyclobacteriaceae","Sphingomonadaceae","SAR116 clade","Rhodospirillales","Rhizobiaceae","Paracoccaceae","Clade III","Clade I","AEGEAN-169 marine group","Actinomarinaceae"))
-
-#pdf("bubble_25families_withHH.pdf",bg ="white",width=11)
-bubble <- ggplot(famplot, aes(x=sample,y=Family,size=proportion,color=Class))+
-  geom_point(alpha=0.8)+ 
-  scale_size(range = c(0,10), name="Relative abundance")+
-  scale_color_manual(values=cbPalette)+
-  facet_grid(Health ~ Month, scales="free", space="free")+
-  theme(axis.text.x=element_blank())+  
-  theme(axis.text.y=element_text(size=10))+
+# plot box and whiskers with points on top
+obs <- ggplot(alpha_meta,aes(x=Health,y=Observed))+
+  geom_boxplot(outlier.shape=NA)+
+  geom_jitter(aes(color=Health))+
+  theme(legend.position="none")+
   theme(axis.title.x=element_blank())+
-  theme(axis.title.y=element_blank())+
-  theme(legend.text = element_text(size=10))
-bubble  
-#dev.off()
+  theme(text=element_text(size=14,face="bold"))+
+  scale_color_manual(values=cols)
+obs
+
+shan <- ggplot(alpha_meta,aes(x=Health,y=Shannon))+
+  geom_boxplot(outlier.shape=NA)+
+  geom_jitter(aes(color=Health))+
+  theme(legend.position="none")+
+  theme(axis.title.x=element_blank())+
+  theme(text=element_text(size=14,face="bold"))+
+  scale_color_manual(values=cols)
+shan
+
+simp <- ggplot(alpha_meta,aes(x=Health,y=Simpson))+
+  geom_boxplot(outlier.shape=NA)+
+  geom_jitter(aes(color=Health))+
+  theme(legend.position="none")+
+  theme(axis.title.x=element_blank())+
+  theme(text=element_text(size=14,face="bold"))+
+  scale_color_manual(values=cols)
+simp
+
+# plot 3 panels
+pdf("AlphaDiversity.pdf", bg ="white", width=8.5)
+plot_grid(obs,shan,simp, labels=c("A","B","C"), ncol=3)
+dev.off()
 
 
+# Test statistical differences in alpha diversity
+# First test for normality using Shapiro test. If the value of p is equal to or less than 0.05, then the hypothesis of normality will be rejected. 
+shapiro.test(alpha.diversity$Observed) # p-value = 4.89e-09
+shapiro.test(alpha.diversity$Shannon) # p-value = 0.0029
+shapiro.test(alpha.diversity$Simpson) # p-value = 0.0004532
+# normality is rejected for all
+
+# ANOVA on ranked data for non-normally distributed diversity measures - Observed, Shannon, Simpson
+anova1 <- aov(rank(Observed) ~ Health, alpha_meta) 
+summary(anova1) 
+TukeyHSD(anova1)
+# not significant
+
+anova2 <- aov(rank(Shannon) ~ Health, alpha_meta) 
+summary(anova2) 
+TukeyHSD(anova2)
+# not significant
+
+anova3 <- aov(rank(Simpson) ~ Health, alpha_meta) 
+summary(anova3) 
+TukeyHSD(anova3)
+# not significant
 ```
 
-### Since we only have 4 HH samples (Sept only), let's re-analyze with those samples removed.
-
+# BETA DIVERSITY
 
 ```{r}
-# Create phyloseq object with filtered ASVs (low abundance taxa removed)
+# Clear data and read in tables with filtered ASVs (low abundance taxa removed)
 otu <- read.table("silva_nochloronomito_otu_table_ps1.txt",sep="\t",header=TRUE, row.names=1)
 taxon <- read.table("silva_nochloronomito_taxa_table_ps1.txt",sep="\t",header=TRUE,row.names=1)
 samples<-read.table("metadata.txt",sep="\t",header=T,row.names=1)
@@ -349,40 +269,7 @@ sampledata = sample_data(samples)
 ps1 <- phyloseq(otu_table(otu, taxa_are_rows=FALSE), 
                sample_data(samples), 
                tax_table(taxon))
-ps1 # 441 taxa and 58 samples
-
-#remove 4 HH samples
-ps1_DD_HD = subset_samples(ps1, Health != "HH")
-ps1_DD_HD # 441 taxa and 54 samples
-#remove taxa only found in HH samples
-ps1_DD_HD <- prune_taxa(taxa_sums(ps1_DD_HD) > 1, ps1_DD_HD)
-ps1_DD_HD # 438 taxa and 54 samples
-
-# export tables with HH samples removed
-otu = as(otu_table(ps1_DD_HD), "matrix")
-taxon = as(tax_table(ps1_DD_HD), "matrix")
-metadata = as(sample_data(ps1_DD_HD), "matrix")
-write.table(otu,"silva_nochloronomito_otu_table_ps1_DD_HD.txt",sep="\t",col.names=NA)
-write.table(taxon,"silva_nochloronomito_taxa_table_ps1_DD_HD.txt",sep="\t",col.names=NA)
-write.table(metadata,"metadata_ps1_DD_HD.txt",sep="\t",col.names=NA)
-
-# export ASV table as relative abundance
-ps_ra<-transform_sample_counts(ps1_DD_HD, function(OTU) OTU/sum(OTU))
-otu_ra = as(otu_table(ps_ra), "matrix")
-write.table(otu_ra,"silva_nochloronomito_otu_table_ps1_DD_HD_RA.txt",sep="\t",col.names=NA)
-
-# clear data and read back in the dataset with 54 samples
-otu <- read.table("silva_nochloronomito_otu_table_ps1_DD_HD.txt",sep="\t",header=TRUE, row.names=1)
-taxon <- read.table("silva_nochloronomito_taxa_table_ps1_DD_HD.txt",sep="\t",header=TRUE,row.names=1)
-samples<-read.table("metadata_ps1_DD_HD.txt",sep="\t",header=T,row.names=1)
-OTU = otu_table(otu, taxa_are_rows=FALSE)
-taxon<-as.matrix(taxon)
-TAX = tax_table(taxon)
-sampledata = sample_data(samples)
-ps1_DD_HD <- phyloseq(otu_table(otu, taxa_are_rows=FALSE), 
-               sample_data(samples), 
-               tax_table(taxon))
-ps1_DD_HD # 438 taxa and 54 samples
+ps1 # 312 taxa and 34 samples
 
 
 # CALCULATE AITCHISON DISTANCE
@@ -418,7 +305,7 @@ theme_set(theme_bw()+theme(panel.grid.major = element_blank(),panel.grid.minor =
 cols<-c("DD"="#D55E00","HD"="#0072B2")
 
 pdf("PCA.pdf",bg ="white",width = 8.5)
-p<-ggplot(single_df,aes(x=PC1,y=PC2,color=Health,shape=Month))
+p<-ggplot(single_df,aes(x=PC1,y=PC2,color=Health))
 p<-p+geom_point(size=2)+
   theme(axis.title = element_text(size=14))+
   theme(axis.text=element_text(size=12))+
@@ -433,25 +320,51 @@ dev.off()
 ####### Use phyloseq/vegan to perform PERMANOVA
 # permanova between groups using Aitchison distance
 dist.clr <- dist(E.clr)
-perm<-adonis2(dist.clr~Health*Treatment,as(sample_data(ps1_DD_HD),"data.frame"),by="terms")
+perm<-adonis2(dist.clr~Health*Treatment,as(sample_data(ps1),"data.frame"),by="terms") # here "Treatment" was applied after microbiome sample was collected
 print(perm)
-# Microbial community variation is explained by Health (R2 = 0.05899, p < 0.001), and by treatment (R2 = 0.04695, p < 0.05)
 
-perm2<-adonis2(dist.clr~Health*Month,as(sample_data(ps1_DD_HD),"data.frame"),by="terms")
+# Permutation test for adonis under reduced model
+# Terms added sequentially (first to last)
+# Permutation: free
+# Number of permutations: 999
+
+# adonis2(formula = dist.clr ~ Health * Treatment, data = as(sample_data(ps1), "data.frame"), by = "terms")
+#                  Df SumOfSqs      R2      F Pr(>F)  
+# Health            1     1952 0.04900 1.6690  0.022 *
+# Treatment         1     1536 0.03857 1.3135  0.092 .
+# Health:Treatment  1     1258 0.03157 1.0752  0.295  
+# Residual         30    35088 0.88086                
+# Total            33    39834 1.00000
+# ---
+# Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+perm2<-adonis2(dist.clr~Health,as(sample_data(ps1),"data.frame"),by="terms")
 print(perm2)
-# Microbial community variation is explained by Health (R2 = 0.05899, p < 0.001), by Month (R2 = 0.08858, p < 0.001), and by the interaction of Health and Month (R2 = 0.05029, p < 0.001)
 
-perm3<-pairwise.adonis2(dist.clr~Health/Month,as(sample_data(ps1_DD_HD),"data.frame"), strata='Month')
-print(perm3)
-# DD sign diff from HD when controlling for month (R2 = 0.19786, p < 0.001)
+# Permutation test for adonis under reduced model
+# Terms added sequentially (first to last)
+# Permutation: free
+# Number of permutations: 999
+
+# adonis2(formula = dist.clr ~ Health, data = as(sample_data(ps1), "data.frame"), by = "terms")
+#          Df SumOfSqs      R2     F Pr(>F)  
+# Health    1     1952 0.049 1.6489  0.024 *
+# Residual 32    37882 0.951                
+# Total    33    39834 1.000                
+# ---
+# Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+# Health condition of sample (DD or HD) explains 5% of variation in the microbial community
+
 ```
+
 # Examine microbiome composition
 
 ```{r}
 # Create phyloseq object with relative abundance of filtered ASVs (low abundance taxa removed)
-otu <- read.table("silva_nochloronomito_otu_table_ps1_DD_HD_RA.txt",sep="\t",header=TRUE, row.names=1)
-taxon <- read.table("silva_nochloronomito_taxa_table_ps1_DD_HD.txt",sep="\t",header=TRUE,row.names=1)
-samples<-read.table("metadata_ps1_DD_HD.txt",sep="\t",header=T,row.names=1)
+otu <- read.table("silva_nochloronomito_otu_table_ps1_RA.txt",sep="\t",header=TRUE, row.names=1)
+taxon <- read.table("silva_nochloronomito_taxa_table_ps1.txt",sep="\t",header=TRUE,row.names=1)
+samples<-read.table("metadata.txt",sep="\t",header=T,row.names=1)
 OTU = otu_table(otu, taxa_are_rows=FALSE)
 taxon<-as.matrix(taxon)
 TAX = tax_table(taxon)
@@ -459,15 +372,15 @@ sampledata = sample_data(samples)
 ps_ra <- phyloseq(otu_table(otu, taxa_are_rows=FALSE), 
                sample_data(samples), 
                tax_table(taxon))
-ps_ra # 438 taxa and 54 samples
+ps_ra # 312 taxa and 34 samples
 
-get_taxa_unique(ps_ra, "Genus") #159 genera
-get_taxa_unique(ps_ra, "Family") #92 families
-get_taxa_unique(ps_ra, "Order") #51 orders
+get_taxa_unique(ps_ra, "Genus") # 130 genera
+get_taxa_unique(ps_ra, "Family") # 73 families
+get_taxa_unique(ps_ra, "Order") # 43 orders
 
 # Plotting most abundant families - first collapse ASVs into families then reshape data for plotting
 ps_ra_f = tax_glom(ps_ra, "Family")
-ps_ra_f # 92 families
+ps_ra_f #   families
 otu_f = as(otu_table(ps_ra_f), "matrix")
 taxon_f = as(tax_table(ps_ra_f), "matrix")
 fam<-t(otu_f)
@@ -479,44 +392,38 @@ fam_tax <- merge(taxon_f, fam, by="ASV", all=FALSE)
 fam_tax$Genus<-NULL
 fam_tax$ASV<-NULL
 # Order by total relative abundance and choose top 25 families
-fam_tax <- fam_tax %>% mutate("total" = rowSums((fam_tax[,6:59]), na.rm = TRUE))  
+fam_tax <- fam_tax %>% mutate("total" = rowSums((fam_tax[,6:39]), na.rm = TRUE))  
 fam_tax <- fam_tax[order(fam_tax$total, decreasing = TRUE),]
 fam25 <- fam_tax[1:25,]
 fam25$total<-NULL
-# how much of the total relative abundance is represented in these 25 families?
-fam26<- fam25 %>% bind_rows(summarise(.,across(where(is.numeric), sum),across(where(is.character), ~"Total")))
-min(fam26[26,6:59]) # 0.87417
-max(fam26[26,6:59]) # 0.9994597
-
+# write out this table to sort the families by taxonomy
 fam_long<-melt(fam25,value.name="proportion",variable.name="sample",id.vars=c("Kingdom","Phylum","Class","Order","Family"))
 # Merge with metadata for plotting aesthetics
 samples <- as.data.frame(samples)
 samples <- tibble::rownames_to_column(samples, "sample")
 famplot <- merge(fam_long,samples,by="sample", all=TRUE)
 # how many classes or orders in the top 25 families?
-unique(famplot$Class) 
-# [1] "Gammaproteobacteria" "Alphaproteobacteria" "Bacteroidia"         "Campylobacteria"     "Cyanobacteriia"      "Verrucomicrobiia"    "Clostridia"         
-# [8] "Blastocatellia"      "Acidimicrobiia" 
+unique(famplot$Class) # 10 classes:"Gammaproteobacteria","Alphaproteobacteria","Campylobacteria","Bacteroidia","Cyanobacteriia","Clostridia","Blastocatellia","Verrucomicrobiia","Polyangiia","Desulfovibrionia" 
 unique(famplot$Family)
-#  [1] "Vibrionaceae"            "Pseudoalteromonadaceae"  "Paracoccaceae"           "Flavobacteriaceae"       "Arcobacteraceae"         "Alteromonadaceae"       
-# [7] "Cyanobiaceae"            "Nitrincolaceae"          "Rhodospirillales"        "Colwelliaceae"           "Saccharospirillaceae"    "Rubritaleaceae"         
-# [13] "Rhizobiaceae"            "Ga0077536"               "Clostridiaceae"          "Blastocatellaceae"       "Actinomarinaceae"        "Alcaligenaceae"         
-# [19] "Shewanellaceae"          "Cyclobacteriaceae"       "AEGEAN-169 marine group" "Clade I"                 "Sphingomonadaceae"       "Clade III"              
-# [25] "SAR116 clade"   
-
+#  [1] "Vibrionaceae"            "Pseudoalteromonadaceae"  "Paracoccaceae"           "Rhodospirillales"        "Arcobacteraceae"        
+# [6] "Flavobacteriaceae"       "Cyanobiaceae"            "Alteromonadaceae"        "Nitrincolaceae"          "Colwelliaceae"          
+# [11] "Clostridiaceae"          "Blastocatellaceae"       "Ga0077536"               "Saccharospirillaceae"    "Rhizobiaceae"           
+# [16] "Shewanellaceae"          "Rubritaleaceae"          "Sandaracinaceae"         "Clade I"                 "SAR116 clade"           
+# [21] "Moritellaceae"           "AEGEAN-169 marine group" "Cyclobacteriaceae"       "Alcaligenaceae"          "Desulfovibrionaceae" 
 
 # set aesthetics
 theme_set(theme_bw()+theme(panel.grid.major = element_blank(),panel.grid.minor = element_blank()))
-cbPalette <- c("#999999", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7","#000000")
-# order families alphabetically under class, first = bottom of plot
-famplot$Family<-factor(famplot$Family, levels=c("Rubritaleaceae","Vibrionaceae","Shewanellaceae","Saccharospirillaceae","Pseudoalteromonadaceae","Nitrincolaceae","Ga0077536","Colwelliaceae","Alteromonadaceae","Alcaligenaceae","Cyanobiaceae","Clostridiaceae","Arcobacteraceae","Blastocatellaceae","Flavobacteriaceae","Cyclobacteriaceae","Sphingomonadaceae","SAR116 clade","Rhodospirillales","Rhizobiaceae","Paracoccaceae","Clade III","Clade I","AEGEAN-169 marine group","Actinomarinaceae"))
+mycols<-c("Alphaproteobacteria"="#CC6677","Bacteroidia"="#88CCEE","Blastocatellia"="#999933","Campylobacteria"="#882255","Clostridia"="#000000","Cyanobacteriia"="#44AA99","Desulfovibrionia"="#DDCC77","Gammaproteobacteria"="#AA4499","Polyangiia"="#332288","Verrucomicrobiia"="#117733")
 
-pdf("bubble_25families.pdf",bg ="white",width=11)
+# order families alphabetically under class, first = bottom of plot
+famplot$Family<-factor(famplot$Family, levels=c("Rubritaleaceae","Sandaracinaceae","Saccharospirillaceae","Nitrincolaceae","Ga0077536","Vibrionaceae","Shewanellaceae","Pseudoalteromonadaceae","Moritellaceae","Colwelliaceae","Alteromonadaceae","Alcaligenaceae","Desulfovibrionaceae","Cyanobiaceae","Clostridiaceae","Arcobacteraceae","Blastocatellaceae","Flavobacteriaceae","Cyclobacteriaceae","Rhodospirillales","AEGEAN-169 marine group","Paracoccaceae","SAR116 clade","Clade I","Rhizobiaceae"))
+
+pdf("bubble_25families_withHH.pdf",bg ="white",width=8.5)
 bubble <- ggplot(famplot, aes(x=sample,y=Family,size=proportion,color=Class))+
   geom_point(alpha=0.8)+ 
   scale_size(range = c(0,10), name="Relative abundance")+
-  scale_color_manual(values=cbPalette)+
-  facet_grid(Health ~ Month, scales="free", space="free")+
+  scale_color_manual(values=mycols)+
+  facet_grid(Health ~ ., scales="free", space="free")+
   theme(axis.text.x=element_blank())+  
   theme(axis.text.y=element_text(size=10))+
   theme(axis.title.x=element_blank())+

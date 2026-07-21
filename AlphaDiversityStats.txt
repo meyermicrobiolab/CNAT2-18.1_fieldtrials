@@ -1,0 +1,76 @@
+OBSERVED RICHNESS - NOT SIGNIFICANTLY DIFFERENT BETWEEN HEALTH CONDITIONS
+
+	Shapiro-Wilk normality test
+
+data:  alpha.diversity$Observed
+W = 0.5511, p-value = 4.89e-09
+
+
+	ANOVA on ranked data for non-normally distributed diversity measures
+ 
+            Df Sum Sq Mean Sq F value Pr(>F)
+Health       1  217.5  217.53    2.28  0.141
+Residuals   32 3052.5   95.39  
+             
+  Tukey multiple comparisons of means
+    95% family-wise confidence level
+
+Fit: aov(formula = rank(Observed) ~ Health, data = alpha_meta)
+
+$Health
+           diff      lwr      upr     p adj
+HD-DD -5.058824 -11.8825 1.764848 0.1408279
+
+#########################
+
+
+
+
+SHANNON DIVERSITY - NOT SIGNIFICANTLY DIFFERENT BETWEEN HEALTH CONDITIONS
+
+	Shapiro-Wilk normality test
+
+data:  alpha.diversity$Shannon
+W = 0.89236, p-value = 0.0029
+
+
+	ANOVA on ranked data for non-normally distributed diversity measures
+
+            Df Sum Sq Mean Sq F value Pr(>F)
+Health       1  183.6  183.56   1.902  0.177
+Residuals   32 3088.9   96.53               
+  Tukey multiple comparisons of means
+    95% family-wise confidence level
+
+Fit: aov(formula = rank(Shannon) ~ Health, data = alpha_meta)
+
+$Health
+           diff       lwr      upr     p adj
+HD-DD -4.647059 -11.51137 2.217256 0.1774643
+
+#########################
+
+
+
+
+SIMPSON DIVERSITY - NOT SIGNIFICANTLY DIFFERENT BETWEEN HEALTH CONDITIONS
+
+	Shapiro-Wilk normality test
+
+data:  alpha.diversity$Simpson
+W = 0.85923, p-value = 0.0004532
+
+
+	ANOVA on ranked data for non-normally distributed diversity measures
+
+            Df Sum Sq Mean Sq F value Pr(>F)
+Health       1     89   88.97   0.894  0.351
+Residuals   32   3184   99.49               
+  Tukey multiple comparisons of means
+    95% family-wise confidence level
+
+Fit: aov(formula = rank(Simpson) ~ Health, data = alpha_meta)
+
+$Health
+           diff       lwr      upr     p adj
+HD-DD -3.235294 -10.20391 3.733326 0.3513988
