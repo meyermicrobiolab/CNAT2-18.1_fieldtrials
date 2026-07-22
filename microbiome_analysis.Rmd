@@ -22,6 +22,7 @@ library(knitr)
 library(dplyr)
 library(tibble)
 library(reshape2)
+library(stringr)
 library(cowplot)
 writeLines(capture.output(sessionInfo()), "sessionInfo.txt")
 ```
@@ -194,8 +195,7 @@ alpha_meta <- merge(alpha.diversity, samples, by="sample", all=TRUE)
 
 #set aesthetics 
 theme_set(theme_bw()+theme(panel.grid.major = element_blank(),panel.grid.minor = element_blank()))
-cols<-c("DD"="#D55E00","HD"="#0072B2")
-alpha_meta$Health<-factor(alpha_meta$Health,levels=c("HD","DD"))
+cols<-c("Apparently Healthy"="#0072B2","Disease Lesion"="#D55E00")
 
 # plot box and whiskers with points on top
 obs <- ggplot(alpha_meta,aes(x=Health,y=Observed))+
@@ -205,6 +205,7 @@ obs <- ggplot(alpha_meta,aes(x=Health,y=Observed))+
   theme(axis.title.x=element_blank())+
   ylab("Observed Richness")+
   theme(text=element_text(size=14,face="bold"))+
+  scale_x_discrete(labels=function(x) str_wrap(x, width=10))+
   scale_color_manual(values=cols)
 obs
 
@@ -214,6 +215,7 @@ shan <- ggplot(alpha_meta,aes(x=Health,y=Shannon))+
   theme(legend.position="none")+
   theme(axis.title.x=element_blank())+
   theme(text=element_text(size=14,face="bold"))+
+  scale_x_discrete(labels=function(x) str_wrap(x, width=10))+
   scale_color_manual(values=cols)
 shan
 
@@ -223,6 +225,7 @@ simp <- ggplot(alpha_meta,aes(x=Health,y=Simpson))+
   theme(legend.position="none")+
   theme(axis.title.x=element_blank())+
   theme(text=element_text(size=14,face="bold"))+
+  scale_x_discrete(labels=function(x) str_wrap(x, width=10))+
   scale_color_manual(values=cols)
 simp
 
@@ -303,10 +306,9 @@ single_df<-merge(samples2,df_out2, by="sample")
 
 #set aesthetics 
 theme_set(theme_bw()+theme(panel.grid.major = element_blank(),panel.grid.minor = element_blank()))
-cols<-c("DD"="#D55E00","HD"="#0072B2")
-single_df$Health<-factor(single_df$Health,levels=c("HD","DD"))
+cols<-c("Apparently Healthy"="#0072B2","Disease Lesion"="#D55E00")
 
-pdf("PCA.pdf",bg ="white",width = 8)
+pdf("PCA.pdf",bg ="white", height=4)
 p<-ggplot(single_df,aes(x=PC1,y=PC2,color=Health))
 p<-p+geom_point(size=2)+
   theme(axis.title = element_text(size=14))+
@@ -415,8 +417,7 @@ unique(famplot$Family)
 
 # set aesthetics
 theme_set(theme_bw()+theme(panel.grid.major = element_blank(),panel.grid.minor = element_blank()))
-famplot$Health<-factor(famplot$Health,levels=c("HD","DD"))
-labels <-c(HD = "Apparently Healthy",DD = "Disease Lesion")
+
 mycols<-c("Alphaproteobacteria"="#CC6677","Bacteroidia"="#88CCEE","Blastocatellia"="#999933","Campylobacteria"="#882255","Clostridia"="#000000","Cyanobacteriia"="#44AA99","Desulfovibrionia"="#DDCC77","Gammaproteobacteria"="#AA4499","Polyangiia"="#332288","Verrucomicrobiia"="#117733")
 
 # order families alphabetically under class, first = bottom of plot
@@ -427,7 +428,7 @@ bubble <- ggplot(famplot, aes(x=sample,y=Family,size=proportion,color=Class))+
   geom_point(alpha=0.8)+ 
   scale_size(range = c(0,10), name="Relative abundance")+
   scale_color_manual(values=mycols)+
-  facet_grid(Health ~ ., scales="free", space="free", labeller=labeller(Health=labels))+
+  facet_grid(Health ~ ., scales="free", space="free")+
   theme(axis.text.x=element_blank())+  
   theme(axis.text.y=element_text(size=10))+
   theme(axis.title.y=element_blank())+
@@ -443,7 +444,6 @@ dev.off()
 
 
 ```{r}
-
 # Clear data and read in tables with all ASVs and the ASV sequence has been replaced with a number
 otu <- read.table("silva_nochloronomito_otu_table_corncob.txt",sep="\t",header=TRUE, row.names=1)
 taxon <- read.table("silva_nochloronomito_taxa_table_corncob.txt",sep="\t",header=TRUE,row.names=1)
@@ -469,9 +469,10 @@ tissue.da <- differentialTest(formula = ~ Percent_healthy_remaining_1month,
 summary(tissue.da)
 tissue.da
 tissue.da$significant_taxa # n = 28
-# [1] "ASV329"  "ASV374"  "ASV395"  "ASV438"  "ASV498"  "ASV821"  "ASV992"  "ASV993"  "ASV994"  "ASV995"  "ASV996"  "ASV997"  "ASV998" 
-# [14] "ASV1151" "ASV1152" "ASV1167" "ASV1259" "ASV1260" "ASV1261" "ASV1262" "ASV1263" "ASV1264" "ASV1265" "ASV1266" "ASV1267" "ASV1268"
-# [27] "ASV1294" "ASV1295"
+# [1] "ASV329"  "ASV374"  "ASV395"  "ASV438"  "ASV498"  "ASV821"  "ASV992"  "ASV993" 
+# [9] "ASV994"  "ASV995"  "ASV996"  "ASV997"  "ASV998"  "ASV1151" "ASV1152" "ASV1167"
+# [17] "ASV1259" "ASV1260" "ASV1261" "ASV1262" "ASV1263" "ASV1264" "ASV1265" "ASV1266"
+# [25] "ASV1267" "ASV1268" "ASV1294" "ASV1295"
 plot(tissue.da, c("Genus"))
 
 
