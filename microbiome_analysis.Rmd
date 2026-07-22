@@ -17,7 +17,6 @@ library(CoDaSeq)
 library(ggplot2)
 library(phyloseq)
 library(vegan)
-library(pairwiseAdonis)
 library(corncob)
 library(knitr)
 library(dplyr)
@@ -196,6 +195,7 @@ alpha_meta <- merge(alpha.diversity, samples, by="sample", all=TRUE)
 #set aesthetics 
 theme_set(theme_bw()+theme(panel.grid.major = element_blank(),panel.grid.minor = element_blank()))
 cols<-c("DD"="#D55E00","HD"="#0072B2")
+alpha_meta$Health<-factor(alpha_meta$Health,levels=c("HD","DD"))
 
 # plot box and whiskers with points on top
 obs <- ggplot(alpha_meta,aes(x=Health,y=Observed))+
@@ -203,6 +203,7 @@ obs <- ggplot(alpha_meta,aes(x=Health,y=Observed))+
   geom_jitter(aes(color=Health))+
   theme(legend.position="none")+
   theme(axis.title.x=element_blank())+
+  ylab("Observed Richness")+
   theme(text=element_text(size=14,face="bold"))+
   scale_color_manual(values=cols)
 obs
@@ -226,8 +227,8 @@ simp <- ggplot(alpha_meta,aes(x=Health,y=Simpson))+
 simp
 
 # plot 3 panels
-pdf("AlphaDiversity.pdf", bg ="white", width=8.5)
-plot_grid(obs,shan,simp, labels=c("A","B","C"), ncol=3)
+pdf("AlphaDiversity.pdf", bg ="white", width=8, height=4)
+plot_grid(obs,shan,simp,ncol=3)
 dev.off()
 
 
@@ -303,8 +304,9 @@ single_df<-merge(samples2,df_out2, by="sample")
 #set aesthetics 
 theme_set(theme_bw()+theme(panel.grid.major = element_blank(),panel.grid.minor = element_blank()))
 cols<-c("DD"="#D55E00","HD"="#0072B2")
+single_df$Health<-factor(single_df$Health,levels=c("HD","DD"))
 
-pdf("PCA.pdf",bg ="white",width = 8.5)
+pdf("PCA.pdf",bg ="white",width = 8)
 p<-ggplot(single_df,aes(x=PC1,y=PC2,color=Health))
 p<-p+geom_point(size=2)+
   theme(axis.title = element_text(size=14))+
@@ -413,21 +415,23 @@ unique(famplot$Family)
 
 # set aesthetics
 theme_set(theme_bw()+theme(panel.grid.major = element_blank(),panel.grid.minor = element_blank()))
+famplot$Health<-factor(famplot$Health,levels=c("HD","DD"))
+labels <-c(HD = "Apparently Healthy",DD = "Disease Lesion")
 mycols<-c("Alphaproteobacteria"="#CC6677","Bacteroidia"="#88CCEE","Blastocatellia"="#999933","Campylobacteria"="#882255","Clostridia"="#000000","Cyanobacteriia"="#44AA99","Desulfovibrionia"="#DDCC77","Gammaproteobacteria"="#AA4499","Polyangiia"="#332288","Verrucomicrobiia"="#117733")
 
 # order families alphabetically under class, first = bottom of plot
 famplot$Family<-factor(famplot$Family, levels=c("Rubritaleaceae","Sandaracinaceae","Saccharospirillaceae","Nitrincolaceae","Ga0077536","Vibrionaceae","Shewanellaceae","Pseudoalteromonadaceae","Moritellaceae","Colwelliaceae","Alteromonadaceae","Alcaligenaceae","Desulfovibrionaceae","Cyanobiaceae","Clostridiaceae","Arcobacteraceae","Blastocatellaceae","Flavobacteriaceae","Cyclobacteriaceae","Rhodospirillales","AEGEAN-169 marine group","Paracoccaceae","SAR116 clade","Clade I","Rhizobiaceae"))
 
-pdf("bubble_25families_withHH.pdf",bg ="white",width=8.5)
+pdf("bubble_25families.pdf",bg ="white",width=8)
 bubble <- ggplot(famplot, aes(x=sample,y=Family,size=proportion,color=Class))+
   geom_point(alpha=0.8)+ 
   scale_size(range = c(0,10), name="Relative abundance")+
   scale_color_manual(values=mycols)+
-  facet_grid(Health ~ ., scales="free", space="free")+
+  facet_grid(Health ~ ., scales="free", space="free", labeller=labeller(Health=labels))+
   theme(axis.text.x=element_blank())+  
   theme(axis.text.y=element_text(size=10))+
-  theme(axis.title.x=element_blank())+
   theme(axis.title.y=element_blank())+
+  xlab("Colony")+
   theme(legend.text = element_text(size=10))
 bubble  
 dev.off()
@@ -435,5 +439,71 @@ dev.off()
 
 ```
 
+# Differentially abundant taxa
+
+
+```{r}
+
+# Clear data and read in tables with all ASVs and the ASV sequence has been replaced with a number
+otu <- read.table("silva_nochloronomito_otu_table_corncob.txt",sep="\t",header=TRUE, row.names=1)
+taxon <- read.table("silva_nochloronomito_taxa_table_corncob.txt",sep="\t",header=TRUE,row.names=1)
+samples<-read.table("metadata.txt",sep="\t",header=T,row.names=1)
+OTU = otu_table(otu, taxa_are_rows=FALSE)
+taxon<-as.matrix(taxon)
+TAX = tax_table(taxon)
+sampledata = sample_data(samples)
+ps <- phyloseq(otu_table(otu, taxa_are_rows=FALSE), 
+               sample_data(samples), 
+               tax_table(taxon))
+ps # 1321 taxa and 34 samples
+
+set.seed(1)
+tissue.da <- differentialTest(formula = ~ Percent_healthy_remaining_1month, 
+                                 phi.formula = ~ Percent_healthy_remaining_1month,
+                                 formula_null = ~ 1,
+                                 phi.formula_null = ~ Percent_healthy_remaining_1month,
+                                 test = "LRT", boot = FALSE,
+                                 data = ps,
+                                 fdr_cutoff = 0.05)
+
+summary(tissue.da)
+tissue.da
+tissue.da$significant_taxa # n = 28
+# [1] "ASV329"  "ASV374"  "ASV395"  "ASV438"  "ASV498"  "ASV821"  "ASV992"  "ASV993"  "ASV994"  "ASV995"  "ASV996"  "ASV997"  "ASV998" 
+# [14] "ASV1151" "ASV1152" "ASV1167" "ASV1259" "ASV1260" "ASV1261" "ASV1262" "ASV1263" "ASV1264" "ASV1265" "ASV1266" "ASV1267" "ASV1268"
+# [27] "ASV1294" "ASV1295"
+plot(tissue.da, c("Genus"))
+
+
+sigtaxto_df <- function(tissue.da, ps) {
+  df.out <- c()
+  for (i in 1:length(tissue.da$significant_models)) { #from 1 to the number of significant taxa
+    df.out = rbind(df.out, tissue.da$significant_models[[i]]$coefficients[2, 1:4]) #bind the significant taxa with coefficient, std. error, t value, Pr. coefficients[2,] is the DA model output.
+  }
+  asv = as.vector(tissue.da$significant_taxa) #get significant ASVs
+  Class = as.vector(otu_to_taxonomy(data = ps, tissue.da$significant_taxa, level = c("Class")))
+  Order = as.vector(otu_to_taxonomy(data = ps, tissue.da$significant_taxa, level = c("Order")))
+  Family = as.vector(otu_to_taxonomy(data = ps, tissue.da$significant_taxa, level = c("Family")))
+  Genus = as.vector(otu_to_taxonomy(data = ps, tissue.da$significant_taxa, level = c("Genus")))
+  
+  df.bind <- as.data.frame(cbind(df.out, asv, Class, Order, Family, Genus))
+  df.bind$asvgenus <- paste0(df.bind$Genus, " (", df.bind$asv, ")")
+  colnames(df.bind) <- c("Estimate", "StdError", "tvalue", "Pr", "asv", "Class", "Order", "Family", "Genus", "asvtaxa")
+  df.bind$Estimate = as.numeric(as.character(df.bind$Estimate)) #estimate column should be numeric 
+  df.bind$StdError = as.numeric(as.character(df.bind$StdError)) #stderror column should be numeric 
+  
+  return(df.bind)
+}
+
+df <- sigtaxto_df(tissue.da, ps) #make a df of the corncob output and the taxonomy
+
+### Save these data so you don't have to re-run the model ###
+write.table(df, "DA-taxa-tissue.txt", sep="\t",row.names = FALSE)
+
+
+
+
+
+```
 
 
