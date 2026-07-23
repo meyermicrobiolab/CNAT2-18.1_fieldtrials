@@ -19,6 +19,7 @@ library(phyloseq)
 library(vegan)
 library(corncob)
 library(knitr)
+library(plyr)
 library(dplyr)
 library(tibble)
 library(reshape2)
@@ -444,7 +445,7 @@ dev.off()
 
 
 ```{r}
-# Clear data and read in tables with all ASVs and the ASV sequence has been replaced with a number
+# Clear data and read in tables with all ASVs and the ASV sequence has been moved to a column after genus, ASV number has been added as the first column
 otu <- read.table("silva_nochloronomito_otu_table_corncob.txt",sep="\t",header=TRUE, row.names=1)
 taxon <- read.table("silva_nochloronomito_taxa_table_corncob.txt",sep="\t",header=TRUE,row.names=1)
 samples<-read.table("metadata.txt",sep="\t",header=T,row.names=1)
@@ -457,51 +458,213 @@ ps <- phyloseq(otu_table(otu, taxa_are_rows=FALSE),
                tax_table(taxon))
 ps # 1321 taxa and 34 samples
 
+# collapse ASVs into higher taxonomic groups for DA analysis
+ps_fam <- ps %>% phyloseq::tax_glom("Family")
+ps_fam #232 families and 34 samples
+
+
+###################### What ASVs are differentially abundant between Apparently Healthy and Disease Lesion samples?
+# DA determined relative to first reference level, so set this manually to the "none" treatment
+sample_data(ps)$Health<-factor(sample_data(ps)$Health,levels=c("Apparently Healthy","Disease Lesion"))
+
 set.seed(1)
-tissue.da <- differentialTest(formula = ~ Percent_healthy_remaining_1month, 
-                                 phi.formula = ~ Percent_healthy_remaining_1month,
+tissue1.da <- differentialTest(formula = ~ Health, 
+                                 phi.formula = ~ Health,
                                  formula_null = ~ 1,
-                                 phi.formula_null = ~ Percent_healthy_remaining_1month,
-                                 test = "LRT", boot = FALSE,
+                                 phi.formula_null = ~ Health,
+                                 test = "Wald", boot = FALSE, # Wald is for comparing 2 groups of samples
                                  data = ps,
                                  fdr_cutoff = 0.05)
+# examine the results of the analysis
+summary(tissue1.da)
+tissue1.da
+length(tissue1.da$significant_taxa) # n = 1 
+tissue1.da$significant_taxa 
+# ASV12
+otu_to_taxonomy(OTU = tissue1.da$significant_taxa, data = ps) # look at taxonomy of significant taxa
+# "Bacteria_Pseudomonadota_Alphaproteobacteria_Rhodobacterales_Paracoccaceae_Shimia" 
+plot(tissue1.da, c("Genus"))
+# Positive values mean that taxon is enriched in Disease Lesion relative to Apparently Healthy tissue
+tissue1.da$p["ASV12"] 
+# p = 7.3716e-05
+tissue1.da$p_fdr["ASV12"] 
+# p_fdr = 0.01732326
 
-summary(tissue.da)
-tissue.da
-tissue.da$significant_taxa # n = 28
-# [1] "ASV329"  "ASV374"  "ASV395"  "ASV438"  "ASV498"  "ASV821"  "ASV992"  "ASV993" 
-# [9] "ASV994"  "ASV995"  "ASV996"  "ASV997"  "ASV998"  "ASV1151" "ASV1152" "ASV1167"
-# [17] "ASV1259" "ASV1260" "ASV1261" "ASV1262" "ASV1263" "ASV1264" "ASV1265" "ASV1266"
-# [25] "ASV1267" "ASV1268" "ASV1294" "ASV1295"
-plot(tissue.da, c("Genus"))
-
-
-sigtaxto_df <- function(tissue.da, ps) {
+# create a function that will return the values of interest
+sigtaxto_df <- function(tissue1.da, ps) {
   df.out <- c()
-  for (i in 1:length(tissue.da$significant_models)) { #from 1 to the number of significant taxa
-    df.out = rbind(df.out, tissue.da$significant_models[[i]]$coefficients[2, 1:4]) #bind the significant taxa with coefficient, std. error, t value, Pr. coefficients[2,] is the DA model output.
+  for (i in 1:length(tissue1.da$significant_models)) { #from 1 to the number of significant taxa
+    df.out = rbind(df.out, tissue1.da$significant_models[[i]]$coefficients[2, 1:4]) #bind the significant taxa with coefficient, std. error, t value, Pr. coefficients[2,] is the DA model output.
   }
-  asv = as.vector(tissue.da$significant_taxa) #get significant ASVs
-  Class = as.vector(otu_to_taxonomy(data = ps, tissue.da$significant_taxa, level = c("Class")))
-  Order = as.vector(otu_to_taxonomy(data = ps, tissue.da$significant_taxa, level = c("Order")))
-  Family = as.vector(otu_to_taxonomy(data = ps, tissue.da$significant_taxa, level = c("Family")))
-  Genus = as.vector(otu_to_taxonomy(data = ps, tissue.da$significant_taxa, level = c("Genus")))
+  asv = as.vector(tissue1.da$significant_taxa) #get significant ASVs
+  Class = as.vector(otu_to_taxonomy(data = ps, tissue1.da$significant_taxa, level = c("Class")))
+  Order = as.vector(otu_to_taxonomy(data = ps, tissue1.da$significant_taxa, level = c("Order")))
+  Family = as.vector(otu_to_taxonomy(data = ps, tissue1.da$significant_taxa, level = c("Family")))
+  Genus = as.vector(otu_to_taxonomy(data = ps, tissue1.da$significant_taxa, level = c("Genus")))
+  Sequence = as.vector(otu_to_taxonomy(data = ps, tissue1.da$significant_taxa, level = c("Sequence")))
   
-  df.bind <- as.data.frame(cbind(df.out, asv, Class, Order, Family, Genus))
+  df.bind <- as.data.frame(cbind(df.out, asv, Class, Order, Family, Genus, Sequence))
   df.bind$asvgenus <- paste0(df.bind$Genus, " (", df.bind$asv, ")")
-  colnames(df.bind) <- c("Estimate", "StdError", "tvalue", "Pr", "asv", "Class", "Order", "Family", "Genus", "asvtaxa")
+  colnames(df.bind) <- c("Estimate", "StdError", "tvalue", "Pr", "asv", "Class", "Order", "Family", "Genus","Sequence","asvtaxa")
   df.bind$Estimate = as.numeric(as.character(df.bind$Estimate)) #estimate column should be numeric 
   df.bind$StdError = as.numeric(as.character(df.bind$StdError)) #stderror column should be numeric 
   
   return(df.bind)
 }
 
-df <- sigtaxto_df(tissue.da, ps) #make a df of the corncob output and the taxonomy
+df <- sigtaxto_df(tissue1.da, ps)
+
+
+
+
+
+
+###################### What ASVs are changing in relation to tissue loss in the month after sampling? 
+# Clear data and read in tables with all ASVs and the ASV sequence has been moved to a column after genus, ASV number has been added as the first column
+otu <- read.table("silva_nochloronomito_otu_table_corncob.txt",sep="\t",header=TRUE, row.names=1)
+taxon <- read.table("silva_nochloronomito_taxa_table_corncob.txt",sep="\t",header=TRUE,row.names=1)
+samples<-read.table("metadata.txt",sep="\t",header=T,row.names=1)
+OTU = otu_table(otu, taxa_are_rows=FALSE)
+taxon<-as.matrix(taxon)
+TAX = tax_table(taxon)
+sampledata = sample_data(samples)
+ps <- phyloseq(otu_table(otu, taxa_are_rows=FALSE), 
+               sample_data(samples), 
+               tax_table(taxon))
+ps # 1321 taxa and 34 samples
+
+set.seed(11)
+tissue2.da <- differentialTest(formula = ~ Percent_healthy_remaining_1month, 
+                                 phi.formula = ~ Percent_healthy_remaining_1month,
+                                 formula_null = ~ 1,
+                                 phi.formula_null = ~ Percent_healthy_remaining_1month,
+                                 test = "LRT", boot = FALSE, # LRT is for comparing 3 or more groups of samples
+                                 data = ps,
+                                 fdr_cutoff = 0.05)
+# examine the results of the analysis
+summary(tissue2.da)
+tissue2.da
+length(tissue2.da$significant_taxa) # n = 28 differentially abundant taxa out of 1321
+tissue2.da$significant_taxa 
+# [1] "ASV329"  "ASV374"  "ASV395"  "ASV438"  "ASV498"  "ASV821"  "ASV992"  "ASV993" 
+# [9] "ASV994"  "ASV995"  "ASV996"  "ASV997"  "ASV998"  "ASV1151" "ASV1152" "ASV1167"
+# [17] "ASV1259" "ASV1260" "ASV1261" "ASV1262" "ASV1263" "ASV1264" "ASV1265" "ASV1266"
+# [25] "ASV1267" "ASV1268" "ASV1294" "ASV1295"
+otu_to_taxonomy(OTU = tissue2.da$significant_taxa, data = ps) # look at taxonomy of significant taxa
+
+
+tissue2.da$p[c("ASV329","ASV374","ASV395","ASV438","ASV498","ASV821","ASV992","ASV993","ASV994","ASV995","ASV996","ASV997","ASV998","ASV1151","ASV1152","ASV1167","ASV1259","ASV1260","ASV1261","ASV1262","ASV1263","ASV1264","ASV1265","ASV1266","ASV1267","ASV1268","ASV1294","ASV1295")] # look at the p-values for each DA ASV
+tissue2.da$p_fdr[c("ASV329","ASV374","ASV395","ASV438","ASV498","ASV821","ASV992","ASV993","ASV994","ASV995","ASV996","ASV997","ASV998","ASV1151","ASV1152","ASV1167","ASV1259","ASV1260","ASV1261","ASV1262","ASV1263","ASV1264","ASV1265","ASV1266","ASV1267","ASV1268","ASV1294","ASV1295")] # look at the FDR-adjusted p-values for each ASV
+#quick look at results with corncob's plotting feature
+plot(tissue2.da, c("Genus"))
+# ???? nothing is "TRUE" in the plot - there are a few "FALSE", most are "NA"
+which(is.na(tissue2.da$p)) %>% names
+
+# create a function that will return the values of interest
+sigtaxto_df <- function(tissue2.da, ps) {
+  df.out <- c()
+  for (i in 1:length(tissue2.da$significant_models)) { #from 1 to the number of significant taxa
+    df.out = rbind(df.out, tissue2.da$significant_models[[i]]$coefficients[2, 1:4]) #bind the significant taxa with coefficient, std. error, t value, Pr. coefficients[2,] is the DA model output.
+  }
+  asv = as.vector(tissue2.da$significant_taxa) #get significant ASVs
+  Class = as.vector(otu_to_taxonomy(data = ps, tissue2.da$significant_taxa, level = c("Class")))
+  Order = as.vector(otu_to_taxonomy(data = ps, tissue2.da$significant_taxa, level = c("Order")))
+  Family = as.vector(otu_to_taxonomy(data = ps, tissue2.da$significant_taxa, level = c("Family")))
+  Genus = as.vector(otu_to_taxonomy(data = ps, tissue2.da$significant_taxa, level = c("Genus")))
+  Sequence = as.vector(otu_to_taxonomy(data = ps, tissue2.da$significant_taxa, level = c("Sequence")))
+  
+  df.bind <- as.data.frame(cbind(df.out, asv, Class, Order, Family, Genus, Sequence))
+  df.bind$asvgenus <- paste0(df.bind$Genus, " (", df.bind$asv, ")")
+  colnames(df.bind) <- c("Estimate", "StdError", "tvalue", "Pr", "asv", "Class", "Order", "Family", "Genus","Sequence","asvtaxa")
+  df.bind$Estimate = as.numeric(as.character(df.bind$Estimate)) #estimate column should be numeric 
+  df.bind$StdError = as.numeric(as.character(df.bind$StdError)) #stderror column should be numeric 
+  
+  return(df.bind)
+}
+
+df <- sigtaxto_df(tissue2.da, ps) #make a df of the corncob output and the taxonomy
+#### there is something wrong with these model coefficients (also seen in the corncob plot - most are "NA")
 
 ### Save these data so you don't have to re-run the model ###
-write.table(df, "DA-taxa-tissue.txt", sep="\t",row.names = FALSE)
+write.table(df, "DA_tissue2.txt", sep="\t",row.names = FALSE)
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+# Clear data and read in tables with all ASVs and the ASV sequence has been moved to a column after genus, ASV number has been added as the first column
+otu <- read.table("silva_nochloronomito_otu_table_corncob.txt",sep="\t",header=TRUE, row.names=1)
+taxon <- read.table("silva_nochloronomito_taxa_table_corncob.txt",sep="\t",header=TRUE,row.names=1)
+samples<-read.table("metadata.txt",sep="\t",header=T,row.names=1)
+OTU = otu_table(otu, taxa_are_rows=FALSE)
+taxon<-as.matrix(taxon)
+TAX = tax_table(taxon)
+sampledata = sample_data(samples)
+ps <- phyloseq(otu_table(otu, taxa_are_rows=FALSE), 
+               sample_data(samples), 
+               tax_table(taxon))
+ps # 1321 taxa and 34 samples
+# pull out only Disease Lesion samples
+psDD = subset_samples(ps, Health == "Disease Lesion")
+psDD # 1321 taxa and 17 samples
+psDD <- prune_taxa(taxa_sums(psDD) > 1, psDD) #remove taxa not found in remaining samples
+psDD # 1056 taxa and 17 samples
+
+set.seed(21)
+tissue2.da <- differentialTest(formula = ~ Percent_healthy_remaining_1month, 
+                                 phi.formula = ~ Percent_healthy_remaining_1month,
+                                 formula_null = ~ 1,
+                                 phi.formula_null = ~ Percent_healthy_remaining_1month,
+                                 test = "LRT", boot = FALSE, # LRT is for comparing 3 or more groups of samples
+                                 data = psDD,
+                                 fdr_cutoff = 0.05)
+
+length(tissue2.da$significant_taxa) # n=2
+tissue2.da$significant_taxa 
+# "ASV109" "ASV498"
+otu_to_taxonomy(OTU = tissue2.da$significant_taxa, data = ps) # look at taxonomy of significant taxa
+tissue2.da$p[c("ASV109","ASV498")] # look at the p-values for each DA ASV
+tissue2.da$p_fdr[c("ASV109","ASV498")] # look at the FDR-adjusted p-values for each ASV
+#quick look at results with corncob's plotting feature
+plot(tissue2.da, c("Genus"))
+
+# create a function that will return the values of interest
+sigtaxto_df <- function(tissue2.da, psDD) {
+  df.out <- c()
+  for (i in 1:length(tissue2.da$significant_models)) { #from 1 to the number of significant taxa
+    df.out = rbind(df.out, tissue2.da$significant_models[[i]]$coefficients[2, 1:4]) #bind the significant taxa with coefficient, std. error, t value, Pr. coefficients[2,] is the DA model output.
+  }
+  asv = as.vector(tissue2.da$significant_taxa) #get significant ASVs
+  Class = as.vector(otu_to_taxonomy(data = psDD, tissue2.da$significant_taxa, level = c("Class")))
+  Order = as.vector(otu_to_taxonomy(data = psDD, tissue2.da$significant_taxa, level = c("Order")))
+  Family = as.vector(otu_to_taxonomy(data = psDD, tissue2.da$significant_taxa, level = c("Family")))
+  Genus = as.vector(otu_to_taxonomy(data = psDD, tissue2.da$significant_taxa, level = c("Genus")))
+  Sequence = as.vector(otu_to_taxonomy(data = psDD, tissue2.da$significant_taxa, level = c("Sequence")))
+  
+  df.bind <- as.data.frame(cbind(df.out, asv, Class, Order, Family, Genus, Sequence))
+  df.bind$asvgenus <- paste0(df.bind$Genus, " (", df.bind$asv, ")")
+  colnames(df.bind) <- c("Estimate", "StdError", "tvalue", "Pr", "asv", "Class", "Order", "Family", "Genus","Sequence","asvtaxa")
+  df.bind$Estimate = as.numeric(as.character(df.bind$Estimate)) #estimate column should be numeric 
+  df.bind$StdError = as.numeric(as.character(df.bind$StdError)) #stderror column should be numeric 
+  
+  return(df.bind)
+}
+
+df <- sigtaxto_df(tissue2.da, psDD) #make a df of the corncob output and the taxonomy
+#### there is something wrong with these model coefficients (also seen in the corncob plot - most are "NA")
+
+### Save these data so you don't have to re-run the model ###
+write.table(df, "DA_tissue2.txt", sep="\t",row.names = FALSE)
 
 
 
