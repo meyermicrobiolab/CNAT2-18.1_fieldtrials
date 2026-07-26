@@ -11,6 +11,14 @@ knitr::opts_chunk$set(echo = TRUE)
 
 # Load libraries
 
+
+
+
+######### TO DO: rename "Apparently Healthy" to Disease Unaffected
+
+
+
+
 ```{r}
 library(dada2)
 library(CoDaSeq)
