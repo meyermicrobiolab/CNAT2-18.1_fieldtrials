@@ -1,35 +1,35 @@
-Sample	Tag ID	Site	Species	Month	Treatment	Tissue	Health	Percent_healthy_remaining_1month	Percent_healthy_remaining_11months
-MK48-5-2455-DD-B	2455	MK48-5	CNAT	September	Probiotic	DD	Disease Lesion	66	68
-MK48-5-2455-HD-B	2455	MK48-5	CNAT	September	Probiotic	HD	Apparently Healthy	66	68
-MK48-5-2461-DD-B	2461	MK48-5	CNAT	September	Probiotic	DD	Disease Lesion	72	5
-MK48-5-2461-HD-B	2461	MK48-5	CNAT	September	Probiotic	HD	Apparently Healthy	72	5
-MK48-5-2470-DD-B	2470	MK48-5	CNAT	September	Probiotic	DD	Disease Lesion	78	0
-MK48-5-2470-HD-B	2470	MK48-5	CNAT	September	Probiotic	HD	Apparently Healthy	78	0
-MK48-5-2476-DD-B	2476	MK48-5	CNAT	September	Control	DD	Disease Lesion	53	0
-MK48-5-2476-HD-B	2476	MK48-5	CNAT	September	Control	HD	Apparently Healthy	53	0
-MK48-5-2488-DD-B	2488	MK48-5	CNAT	September	Probiotic	DD	Disease Lesion	23	0
-MK48-5-2488-HD-B	2488	MK48-5	CNAT	September	Probiotic	HD	Apparently Healthy	23	0
-MK48-5-2612-DD-B	2612	MK48-5	CNAT	September	Probiotic	DD	Disease Lesion	31	0
-MK48-5-2612-HD-B	2612	MK48-5	CNAT	September	Probiotic	HD	Apparently Healthy	31	0
-MK48-5-2623-DD-B	2623	MK48-5	CNAT	September	Control	DD	Disease Lesion	4	0
-MK48-5-2623-HD-B	2623	MK48-5	CNAT	September	Control	HD	Apparently Healthy	4	0
-MK48-5-2636-DD-B	2636	MK48-5	CNAT	September	Probiotic	DD	Disease Lesion	92	0
-MK48-5-2636-HD-B	2636	MK48-5	CNAT	September	Probiotic	HD	Apparently Healthy	92	0
-MK48-5-2637-DD-B	2637	MK48-5	CNAT	September	Control	DD	Disease Lesion	86	0
-MK48-5-2637-HD-B	2637	MK48-5	CNAT	September	Control	HD	Apparently Healthy	86	0
-MK48-5-2641-DD-B	2641	MK48-5	CNAT	September	Control	DD	Disease Lesion	85	0
-MK48-5-2641-HD-B	2641	MK48-5	CNAT	September	Control	HD	Apparently Healthy	85	0
-MK48-5-2642-DD-B	2642	MK48-5	CNAT	September	Control	DD	Disease Lesion	11	0
-MK48-5-2642-HD-B	2642	MK48-5	CNAT	September	Control	HD	Apparently Healthy	11	0
-MK48-5-2649-DD-B	2649	MK48-5	CNAT	September	Probiotic	DD	Disease Lesion	66	0
-MK48-5-2649-HD-B	2649	MK48-5	CNAT	September	Probiotic	HD	Apparently Healthy	66	0
-MK48-5-2657-DD-B	2657	MK48-5	CNAT	September	Control	DD	Disease Lesion	38	0
-MK48-5-2657-HD-B	2657	MK48-5	CNAT	September	Control	HD	Apparently Healthy	38	0
-MK48-5-2664-DD-B	2664	MK48-5	CNAT	September	Probiotic	DD	Disease Lesion	58	0
-MK48-5-2664-HD-B	2664	MK48-5	CNAT	September	Probiotic	HD	Apparently Healthy	58	0
-MK48-5-2667-DD-B	2667	MK48-5	CNAT	September	Control	DD	Disease Lesion	45	0
-MK48-5-2667-HD-B	2667	MK48-5	CNAT	September	Control	HD	Apparently Healthy	45	0
-MK48-5-2692-DD-B	2692	MK48-5	CNAT	September	Control	DD	Disease Lesion	9	0
-MK48-5-2692-HD-B	2692	MK48-5	CNAT	September	Control	HD	Apparently Healthy	9	0
-MK48-5-2696-DD-B	2696	MK48-5	CNAT	September	Probiotic	DD	Disease Lesion	98	105
-MK48-5-2696-HD-B	2696	MK48-5	CNAT	September	Probiotic	HD	Apparently Healthy	98	105
+Sample	Tag ID	Site	Species	Month	Treatment	Tissue	Health	Percent_healthy_remaining_1month	Percent_tissue_loss_1month	Percent_healthy_remaining_11months	Percent_tissue_loss_11months
+MK48-5-2455-DD-B	2455	MK48-5	CNAT	September	Probiotic	DD	Disease Lesion	66	34	68	32
+MK48-5-2455-HD-B	2455	MK48-5	CNAT	September	Probiotic	HD	Unaffected Tissue	66	34	68	32
+MK48-5-2461-DD-B	2461	MK48-5	CNAT	September	Probiotic	DD	Disease Lesion	72	28	5	95
+MK48-5-2461-HD-B	2461	MK48-5	CNAT	September	Probiotic	HD	Unaffected Tissue	72	28	5	95
+MK48-5-2470-DD-B	2470	MK48-5	CNAT	September	Probiotic	DD	Disease Lesion	78	22	0	100
+MK48-5-2470-HD-B	2470	MK48-5	CNAT	September	Probiotic	HD	Unaffected Tissue	78	22	0	100
+MK48-5-2476-DD-B	2476	MK48-5	CNAT	September	Control	DD	Disease Lesion	53	47	0	100
+MK48-5-2476-HD-B	2476	MK48-5	CNAT	September	Control	HD	Unaffected Tissue	53	47	0	100
+MK48-5-2488-DD-B	2488	MK48-5	CNAT	September	Probiotic	DD	Disease Lesion	23	77	0	100
+MK48-5-2488-HD-B	2488	MK48-5	CNAT	September	Probiotic	HD	Unaffected Tissue	23	77	0	100
+MK48-5-2612-DD-B	2612	MK48-5	CNAT	September	Probiotic	DD	Disease Lesion	31	69	0	100
+MK48-5-2612-HD-B	2612	MK48-5	CNAT	September	Probiotic	HD	Unaffected Tissue	31	69	0	100
+MK48-5-2623-DD-B	2623	MK48-5	CNAT	September	Control	DD	Disease Lesion	4	96	0	100
+MK48-5-2623-HD-B	2623	MK48-5	CNAT	September	Control	HD	Unaffected Tissue	4	96	0	100
+MK48-5-2636-DD-B	2636	MK48-5	CNAT	September	Probiotic	DD	Disease Lesion	92	8	0	100
+MK48-5-2636-HD-B	2636	MK48-5	CNAT	September	Probiotic	HD	Unaffected Tissue	92	8	0	100
+MK48-5-2637-DD-B	2637	MK48-5	CNAT	September	Control	DD	Disease Lesion	86	14	0	100
+MK48-5-2637-HD-B	2637	MK48-5	CNAT	September	Control	HD	Unaffected Tissue	86	14	0	100
+MK48-5-2641-DD-B	2641	MK48-5	CNAT	September	Control	DD	Disease Lesion	85	15	0	100
+MK48-5-2641-HD-B	2641	MK48-5	CNAT	September	Control	HD	Unaffected Tissue	85	15	0	100
+MK48-5-2642-DD-B	2642	MK48-5	CNAT	September	Control	DD	Disease Lesion	11	89	0	100
+MK48-5-2642-HD-B	2642	MK48-5	CNAT	September	Control	HD	Unaffected Tissue	11	89	0	100
+MK48-5-2649-DD-B	2649	MK48-5	CNAT	September	Probiotic	DD	Disease Lesion	66	34	0	100
+MK48-5-2649-HD-B	2649	MK48-5	CNAT	September	Probiotic	HD	Unaffected Tissue	66	34	0	100
+MK48-5-2657-DD-B	2657	MK48-5	CNAT	September	Control	DD	Disease Lesion	38	62	0	100
+MK48-5-2657-HD-B	2657	MK48-5	CNAT	September	Control	HD	Unaffected Tissue	38	62	0	100
+MK48-5-2664-DD-B	2664	MK48-5	CNAT	September	Probiotic	DD	Disease Lesion	58	42	0	100
+MK48-5-2664-HD-B	2664	MK48-5	CNAT	September	Probiotic	HD	Unaffected Tissue	58	42	0	100
+MK48-5-2667-DD-B	2667	MK48-5	CNAT	September	Control	DD	Disease Lesion	45	55	0	100
+MK48-5-2667-HD-B	2667	MK48-5	CNAT	September	Control	HD	Unaffected Tissue	45	55	0	100
+MK48-5-2692-DD-B	2692	MK48-5	CNAT	September	Control	DD	Disease Lesion	9	91	0	100
+MK48-5-2692-HD-B	2692	MK48-5	CNAT	September	Control	HD	Unaffected Tissue	9	91	0	100
+MK48-5-2696-DD-B	2696	MK48-5	CNAT	September	Probiotic	DD	Disease Lesion	98	2	105	-5
+MK48-5-2696-HD-B	2696	MK48-5	CNAT	September	Probiotic	HD	Unaffected Tissue	98	2	105	-5

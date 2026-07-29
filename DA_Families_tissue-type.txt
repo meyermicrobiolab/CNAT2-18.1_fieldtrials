@@ -1,0 +1,5 @@
+"Estimate"	"StdError"	"tvalue"	"Pr"	"asv"	"Class"	"Order"	"Family"
+3.08034905827902	0.480161453894216	"6.41523602799997"	"4.39492112012842e-07"	"ASV10"	"Alphaproteobacteria"	"Rhodobacterales"	"Paracoccaceae"
+2.44425416688044	0.698020588432901	"3.50169351360816"	"0.00147018174031131"	"ASV15"	"Campylobacteria"	"Campylobacterales"	"Arcobacteraceae"
+6.63438450932322	1.92078366782802	"3.45399881332042"	"0.00166823824150573"	"ASV23"	"Clostridia"	"Clostridiales"	"Clostridiaceae"
+4.58444815523961	0.841359393386487	"5.44885834909042"	"6.55951464142978e-06"	"ASV35"	"Gammaproteobacteria"	"Pseudomonadales"	"Saccharospirillaceae"
