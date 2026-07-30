@@ -751,7 +751,7 @@ cols<-c("Unaffected Tissue"="#0072B2","Disease Lesion"="#D55E00")
 pdf("VibrioASV1_vs_TissueLoss.pdf",bg ="white",width=8)
 p1 <- ggplot(DAplot, aes(x=Percent_tissue_loss_1month, y=ProportionASV1,color=Health))+
   geom_point(size=3)+
-  scale_color_manual(values=cols,breaks = c("Unaffected Tissue","Disease Lesion"))+
+  scale_color_manual(values=cols,breaks = c("Disease Lesion","Unaffected Tissue"))+
   geom_smooth(method=lm,se=TRUE)+
   ylab(expression("Proportion of"~italic(Vibrio)~"ASV1"))+
   xlab("Percentage of Tissue Loss")+
