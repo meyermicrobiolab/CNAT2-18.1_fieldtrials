@@ -1,0 +1,90 @@
+Permutation test for adonis under reduced model
+Terms added sequentially (first to last)
+Permutation: free
+Number of permutations: 999
+
+adonis2(formula = dist.clr ~ Health * Treatment, data = as(sample_data(ps1), "data.frame"), by = "terms")
+                 Df SumOfSqs      R2      F Pr(>F)  
+Health            1     1952 0.04900 1.6690  0.025 *
+Treatment         1     1536 0.03857 1.3135  0.093 .
+Health:Treatment  1     1258 0.03157 1.0752  0.297  
+Residual         30    35088 0.88086                
+Total            33    39834 1.00000                
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+
+# Here, treatment is applied AFTER sampling the microbiome
+
+
+Permutation test for adonis under reduced model
+Terms added sequentially (first to last)
+Permutation: free
+Number of permutations: 999
+
+adonis2(formula = dist.clr ~ Treatment, data = as(sample_data(ps1), "data.frame"), by = "terms")
+          Df SumOfSqs      R2      F Pr(>F)
+Treatment  1     1536 0.03857 1.2837  0.121
+Residual  32    38298 0.96143              
+Total     33    39834 1.00000 
+
+# Treatment alone does not explain the variation in microbiome composition
+
+
+
+Permutation test for adonis under reduced model
+Terms added sequentially (first to last)
+Permutation: free
+Number of permutations: 999
+
+adonis2(formula = dist.clr ~ Health, data = as(sample_data(ps1), "data.frame"), by = "terms")
+         Df SumOfSqs    R2      F Pr(>F)  
+Health    1     1952 0.049 1.6489  0.029 *
+Residual 32    37882 0.951                
+Total    33    39834 1.000                
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+
+# Health condition of the sample (disease lesion or unaffected tissue) explains 5% of the variation in the microbial community
+
+
+
+############# CONTROLLING FOR CORAL COLONY (using pairwise PERMANOVA)
+
+
+$parent_call
+[1] "dist.clr ~ Treatment/Tag.ID , strata = Tag.ID , permutations 999"
+
+$Probiotic_vs_Control
+         Df SumOfSqs      R2      F Pr(>F)
+Model     3     5082 0.12758 1.4623      1
+Residual 30    34752 0.87242              
+Total    33    39834 1.00000              
+
+attr(,"class")
+[1] "pwadstrata" "list"  
+
+
+
+
+
+$parent_call
+[1] "dist.clr ~ Health/Tag.ID , strata = Tag.ID , permutations 999"
+
+$`Disease Lesion_vs_Unaffected Tissue`
+         Df SumOfSqs      R2      F Pr(>F)   
+Model     3     5181 0.13007 1.4952   0.01 **
+Residual 30    34653 0.86993                 
+Total    33    39834 1.00000                 
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+attr(,"class")
+[1] "pwadstrata" "list"      
+
+
+##### WHEN CONTROLLING FOR COLONY, HEALTH EXPLAINS 13% OF THE VARIATION IN MICROBIOME COMPOSITION
+
+
+

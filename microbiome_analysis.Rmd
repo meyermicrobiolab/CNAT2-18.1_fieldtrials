@@ -17,6 +17,7 @@ library(CoDaSeq)
 library(ggplot2)
 library(phyloseq)
 library(vegan)
+library(pairwiseAdonis)
 library(corncob)
 library(knitr)
 library(plyr)
@@ -326,41 +327,21 @@ dev.off()
 ####### Use phyloseq/vegan to perform PERMANOVA
 # permanova between groups using Aitchison distance
 dist.clr <- dist(E.clr)
-perm<-adonis2(dist.clr~Health*Treatment,as(sample_data(ps1),"data.frame"),by="terms") # here "Treatment" was applied after microbiome sample was collected
-print(perm)
+perm<-adonis2(dist.clr~Health*Treatment,as(sample_data(ps1),"data.frame"),by="terms")
+print(perm) # copy output to text file
 
-# Permutation test for adonis under reduced model
-# Terms added sequentially (first to last)
-# Permutation: free
-# Number of permutations: 999
+perm2<-adonis2(dist.clr~Treatment,as(sample_data(ps1),"data.frame"),by="terms")
+print(perm2) # copy output to text file
 
-# adonis2(formula = dist.clr ~ Health * Treatment, data = as(sample_data(ps1), "data.frame"), by = "terms")
-#                  Df SumOfSqs      R2      F Pr(>F)  
-# Health            1     1952 0.04900 1.6690  0.022 *
-# Treatment         1     1536 0.03857 1.3135  0.092 .
-# Health:Treatment  1     1258 0.03157 1.0752  0.295  
-# Residual         30    35088 0.88086                
-# Total            33    39834 1.00000
-# ---
-# Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+perm3<-adonis2(dist.clr~Health,as(sample_data(ps1),"data.frame"),by="terms")
+print(perm3) # copy output to text file
 
-perm2<-adonis2(dist.clr~Health,as(sample_data(ps1),"data.frame"),by="terms")
-print(perm2)
+perm4<-pairwise.adonis2(dist.clr~Treatment/Tag.ID,as(sample_data(ps1),"data.frame"), strata='Tag.ID')
+print(perm4) # copy output to text file
 
-# Permutation test for adonis under reduced model
-# Terms added sequentially (first to last)
-# Permutation: free
-# Number of permutations: 999
-
-# adonis2(formula = dist.clr ~ Health, data = as(sample_data(ps1), "data.frame"), by = "terms")
-#          Df SumOfSqs      R2     F Pr(>F)  
-# Health    1     1952 0.049 1.6489  0.024 *
-# Residual 32    37882 0.951                
-# Total    33    39834 1.000                
-# ---
-# Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
-
-# Health condition of sample (DD or HD) explains 5% of variation in the microbial community
+perm5<-pairwise.adonis2(dist.clr~Health/Tag.ID,as(sample_data(ps1),"data.frame"), strata='Tag.ID')
+print(perm5) # copy output to text file
+##### WHEN CONTROLLING FOR COLONY, HEALTH EXPLAINS 13% OF THE VARIATION IN MICROBIOME COMPOSITION
 
 ```
 
@@ -535,6 +516,15 @@ summary(tissue1.da)
 tissue1.da
 length(tissue1.da$significant_taxa) # 4
 tissue1.da$significant_taxa # gives ASV names, but these represent families
+
+tissue1.da$p[c("ASV10","ASV15","ASV23","ASV35")] 
+#        ASV10        ASV15        ASV23        ASV35 
+# 1.406048e-10 4.623111e-04 5.523398e-04 5.069417e-08 
+
+tissue1.da$p_fdr[c("ASV10","ASV15","ASV23","ASV35")]
+#        ASV10        ASV15        ASV23        ASV35 
+# 1.729440e-08 1.698445e-02 1.698445e-02 3.117691e-06 
+
 
 otu_to_taxonomy(OTU = tissue1.da$significant_taxa, data = ps_fam) # look at taxonomy of significant taxa
 #                                                                            ASV10 
