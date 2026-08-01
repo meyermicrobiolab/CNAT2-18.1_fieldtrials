@@ -77,7 +77,7 @@ sum(seqtab.nochim)/sum(seqtab)
 table(nchar(getSequences(seqtab)))
 # Track reads through the pipeline
 getN <- function(x) sum(getUniques(x))
-track <- cbind(out, sapply(dadaFs, getN), sapply(mergers, getN), rowSums(seqtab))
+track <- cbind(out, sapply(dadaFs, getN), sapply(mergers, getN), rowSums(seqtab.nochim))
 colnames(track) <- c("input", "filtered", "denoised", "merged", "tabled")
 rownames(track) <- sample.names
 head(track)
