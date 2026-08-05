@@ -16,8 +16,8 @@ attached base packages:
 [1] stats     graphics  grDevices utils     datasets  methods   base     
 
 other attached packages:
- [1] pairwiseAdonis_0.4.1 cluster_2.1.8.2      cowplot_1.2.0        stringr_1.6.0        reshape2_1.4.5      
- [6] tibble_3.3.1         dplyr_1.2.1          plyr_1.8.9           knitr_1.51           corncob_0.4.3       
+ [1] cowplot_1.2.0        stringr_1.6.0        reshape2_1.4.5       tibble_3.3.1         dplyr_1.2.1         
+ [6] plyr_1.8.9           knitr_1.51           corncob_0.4.3        pairwiseAdonis_0.4.1 cluster_2.1.8.2     
 [11] vegan_2.7-5          permute_0.9-10       phyloseq_1.54.2      ggplot2_4.0.3        CoDaSeq_0.99.7      
 [16] car_3.1-5            carData_3.0-6        ALDEx2_1.42.0        latticeExtra_0.6-31  lattice_0.22-9      
 [21] zCompositions_1.6.2  truncnorm_1.0-9      NADA_1.6-1.2         survival_3.8-6       MASS_7.3-65         
@@ -35,14 +35,14 @@ loaded via a namespace (and not attached):
 [33] R6_2.6.1                    stringi_1.8.7               RColorBrewer_1.1-3          GenomicRanges_1.62.1       
 [37] Seqinfo_1.0.0               SummarizedExperiment_1.40.0 iterators_1.0.14            directlabels_2026.4.23     
 [41] IRanges_2.44.0              Matrix_1.7-5                splines_4.5.3               igraph_2.3.3               
-[45] tidyselect_1.2.1            viridis_0.6.5               rstudioapi_0.19.0           abind_1.4-8                
-[49] yaml_2.3.12                 codetools_0.2-20            hwriter_1.3.2.1             withr_3.0.3                
-[53] Biobase_2.70.0              ShortRead_1.68.0            S7_0.2.2                    evaluate_1.0.5             
+[45] tidyselect_1.2.1            rstudioapi_0.19.0           abind_1.4-8                 yaml_2.3.12                
+[49] viridis_0.6.5               codetools_0.2-20            hwriter_1.3.2.1             Biobase_2.70.0             
+[53] withr_3.0.3                 ShortRead_1.68.0            S7_0.2.2                    evaluate_1.0.5             
 [57] RcppParallel_5.1.11-2       Biostrings_2.78.0           pillar_1.11.1               MatrixGenerics_1.22.0      
 [61] foreach_1.5.2               stats4_4.5.3                generics_0.1.4              S4Vectors_0.48.1           
 [65] scales_1.4.0                glue_1.8.1                  tools_4.5.3                 interp_1.1-6               
 [69] data.table_1.18.4           GenomicAlignments_1.46.0    rhdf5_2.54.1                grid_4.5.3                 
 [73] ape_5.8-1                   nlme_3.1-169                Formula_1.2-5               cli_3.6.6                  
-[77] zigg_0.0.2                  viridisLite_0.4.3           S4Arrays_1.10.1             gtable_0.3.6               
+[77] zigg_0.0.2                  S4Arrays_1.10.1             viridisLite_0.4.3           gtable_0.3.6               
 [81] digest_0.6.39               BiocGenerics_0.56.0         SparseArray_1.10.10         farver_2.1.2               
 [85] htmltools_0.5.9             multtest_2.66.0             lifecycle_1.0.5            
